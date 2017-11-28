@@ -5,6 +5,7 @@ package main
  * 2 specific Hyperledger Fabric specific libraries for Smart Contracts
  */
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -50,8 +51,8 @@ func (s *SmartContract) queryContract(APIstub shim.ChaincodeStubInterface, args 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 0")
 	}
-	carAsBytes, _ := APIstub.GetState(args[0])
-	return shim.Success(carAsBytes)
+	contractAsBytes, _ := APIstub.GetState(args[0])
+	return shim.Success(contractAsBytes)
 }
 
 func (s *SmartContract) queryInValidTransactions(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
@@ -59,8 +60,8 @@ func (s *SmartContract) queryInValidTransactions(APIstub shim.ChaincodeStubInter
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
-	carAsBytes, _ := APIstub.GetState(args[0])
-	return shim.Success(carAsBytes)
+	transactionAsBytes, _ := APIstub.GetState(args[0])
+	return shim.Success(transactionAsBytes)
 }
 
 func (s *SmartContract) queryValidTransactions(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
@@ -68,17 +69,19 @@ func (s *SmartContract) queryValidTransactions(APIstub shim.ChaincodeStubInterfa
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 0")
 	}
-	carAsBytes, _ := APIstub.GetState(args[0])
-	return shim.Success(carAsBytes)
+	transactionAsBytes, _ := APIstub.GetState(args[0])
+	return shim.Success(transactionAsBytes)
 }
 
 func (s *SmartContract) createContract(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
-	if len(args) != 2 {
-		return shim.Error("Incorrect number of arguments. Expecting 2")
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
-
-	APIstub.PutState(args[0], []byte(args[1]))
+	contractObj := contract{}
+	json.Unmarshal([]byte(args[0]), &contractObj)
+	contractAsBytes, _ := json.Marshal(contractObj)
+	APIstub.PutState(contractObj.Lookupkeyhash, contractAsBytes)
 
 	return shim.Success(nil)
 }
